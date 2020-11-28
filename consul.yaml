@@ -26,7 +26,7 @@ spec:
         - consul
         - agent
         - -server
-        - -bootstrap-expect=2
+        - -bootstrap-expect=3
         - -ui
           #- -client=http
         - -data-dir=/tmp/consul
@@ -63,7 +63,7 @@ spec:
         - consul
         - agent
         - -server
-        - -bootstrap-expect=2
+        - -bootstrap-expect=3
         - -ui
           #- -client=http
         - -data-dir=/tmp/consul
