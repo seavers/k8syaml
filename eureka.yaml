@@ -1,11 +1,11 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: eureka
   namespace: default
 spec:
   replicas: 2
-  #serviceName: eureka
+  serviceName: eureka
   selector:
     matchLabels:
       k8s-app: eureka

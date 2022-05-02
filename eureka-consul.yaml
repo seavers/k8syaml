@@ -1,0 +1,99 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: consul-cfg-eureka
+  labels:
+    app: eureka
+    type: consul
+data:
+  web.json: |
+    {
+      "service": {
+        "name": "eureka",
+        "tags": [
+          "java",
+          "middleware"
+        ],
+        "port": 8761
+      }
+    }
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: eureka
+  namespace: default
+spec:
+  replicas: 2
+  serviceName: eureka
+  selector:
+    matchLabels:
+      k8s-app: eureka
+  template:
+    metadata:
+      labels:
+        k8s-app: eureka
+        kubernetes.io/cluster-service: "true"
+    spec:
+      containers:
+      - name: eureka
+        image: registry.cn-hangzhou.aliyuncs.com/lianghaijun/eureka:springcloud
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            memory: 50Mi
+          limits:        ##资源限制，上限
+            memory: 400Mi
+        command: 
+        - "/bin/sh"
+        - "-c"
+        - "java ${JAVA_OPTS} -jar /app.jar"
+        - "/app.jar"
+        ports:
+        - containerPort: 8761
+        env:
+        - name: eureka.client.serviceUrl.defaultZone
+          value: http://eureka-0.eureka:8761/eureka,http://eureka-1.eureka:8761/eureka
+        - name: JAVA_OPTS
+          value: -Xms500M -Xmx500M -XX:+PrintGCDateStamps -XX:+PrintGCDetails -Xloggc:/gc.log
+      - name: consul
+        image: registry.cn-hangzhou.aliyuncs.com/lianghaijun/consul:latest
+        imagePullPolicy: IfNotPresent
+        args: 
+        - consul
+        - agent
+        - -data-dir=/tmp/consul
+        - -config-dir=/etc/consul.d/
+        - -join=consul-0.consul
+        volumeMounts:
+        - name: consul-cfg
+          mountPath: /etc/consul.d/
+      volumes:
+      - name: consul-cfg
+        configMap:
+          name: consul-cfg-eureka
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: eureka
+  namespace: default
+  labels:
+    k8s-app: eureka
+    kubernetes.io/cluster-service: "true"
+spec:
+  type: ClusterIP
+  #clusterIP: None
+  selector:
+    k8s-app: eureka
+  ports:
+  - name: eureka
+    port: 8761
+    targetPort: 8761
+  - name: http
+    port: 80
+    targetPort: 8761

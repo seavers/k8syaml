@@ -1,0 +1,13 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+Metadata:
+ name: nginx-ingress
+spec:
+ rules:
+ - host: eureka.k8s-master.lianghaijun.com
+   http:
+     paths:
+     - path: /
+       backend:
+         serviceName: eureka
+         servicePort: 80
